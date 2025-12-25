@@ -1,0 +1,106 @@
+#!/usr/bin/sh
+
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+echo "===================================================="
+echo "==========  Developed by Chieu Nhat Nang  =========="
+echo "=========== Tiny initrd to load Debian ============="
+echo "===================================================="
+
+[ -d /proc ] || mkdir /proc
+[ -d /sys ]  || mkdir /sys
+[ -d /dev ]  || mkdir -p /dev
+[ -d /run ]  || mkdir -p /run
+[ -d /dev/pts ] || mkdir -p /dev/pts
+
+# Mount API filesystems
+mount -t proc    proc    /proc
+mount -t sysfs   sysfs   /sys
+# Make sure /dev exists and has a console
+mount -t devtmpfs devtmpfs /dev 2>/dev/null || {
+    echo "devtmpfs mount failed, creating minimal /dev nodes"
+    mkdir -p /dev
+    [ -c /dev/console ] || mknod /dev/console c 5 1
+    [ -c /dev/null    ] || mknod /dev/null    c 1 3
+    [ -c /dev/tty     ] || mknod /dev/tty     c 5 0
+}
+mount -t devpts  devpts  /dev/pts 2>/dev/null || true
+mount -t tmpfs   tmpfs   /run  2>/dev/null || true
+
+# Choose root device in order:
+# 1) kernel cmdline root=
+# 2) /dev/mmcblk0p2
+# 3) /dev/data
+# 4) shell
+
+ROOTDEV=""
+
+# 1) parse root= from /proc/cmdline (busybox-free, sed-free)
+CMDLINE="$(cat /proc/cmdline 2>/dev/null)"
+for arg in $CMDLINE; do
+    case "$arg" in
+        root=*)
+            CMDROOT="${arg#root=}"
+            case "$CMDROOT" in
+                LABEL=*|UUID=*|PARTUUID=*)
+                    ROOTDEV="$CMDROOT"
+                    ;;
+                *)
+                    [ -b "$CMDROOT" ] && ROOTDEV="$CMDROOT"
+                    ;;
+            esac
+            ;;
+    esac
+done
+
+# 2) fallback: SD / eMMC
+[ -n "$ROOTDEV" ] || { [ -b /dev/mmcblk0p2 ] && ROOTDEV=/dev/mmcblk0p2; }
+
+# 3) fallback: Amlogic Android "data"
+[ -n "$ROOTDEV" ] || { [ -b /dev/data ] && ROOTDEV=/dev/data; }
+
+# 4) fail hard
+if [ -z "$ROOTDEV" ]; then
+    echo "ERROR: No suitable root device found."
+    echo "Tried: cmdline root=, /dev/mmcblk0p2, /dev/data"
+    echo "Dropping to shell."
+    exec sh
+fi
+
+ROOTFS_TYPE=ext4
+ROOTMNT=/newroot
+
+echo "Using root device: $ROOTDEV ($ROOTFS_TYPE)"
+
+mkdir -p "$ROOTMNT"
+
+# Mount real root
+mount -t "$ROOTFS_TYPE" "$ROOTDEV" "$ROOTMNT"
+if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to mount $ROOTDEV on $ROOTMNT"
+    echo "Dropping to shell."
+    exec sh
+fi
+
+# Make sure target has basic mountpoints
+mkdir -p "$ROOTMNT"/{proc,sys,dev}
+
+# Bind /dev into new root so $ROOTMNT/dev/console exists
+mount -o bind /dev "$ROOTMNT/dev" || {
+    echo "ERROR: failed to bind-mount /dev"
+    exec sh
+}
+
+echo "Running run-init..."
+# run-init path may be /usr/bin or /bin depending on your build
+if command -v run-init >/dev/null 2>&1; then
+    RI="$(command -v run-init)"
+else
+    RI="/usr/bin/run-init"
+fi
+
+exec "$RI" "$ROOTMNT" /sbin/init
+
+# If run-init fails:
+echo "run-init failed, dropping to shell."
+exec sh
