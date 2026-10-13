@@ -73,7 +73,7 @@ Skip this step if you want to boot Debian fully from **internal eMMC**.
 
 ---
 
-Chú Ý quan trọng, để đúng định dạng và vị trí file, lệch vị trí folder thôi là TWRP sẽ không nhìn thấy file để nạp
+Chú Ý quan trọng, để đúng định dạng và vị trí file, lệch vị trí folder thôi là TWRP sẽ không nhìn thấy file để nạp!
 
 
 
