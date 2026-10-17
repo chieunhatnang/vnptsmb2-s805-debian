@@ -42,7 +42,7 @@ Please follow the steps **exactly**. No information in this guide is optional un
 ### 1. Extract the Files
 
 - Use **7z (7-Zip)** to extract all provided archives.
-
+Please Make Sure You get the exactly File you need
 ---
 
 ### 2. Prepare the SD Card (Debian Image)
