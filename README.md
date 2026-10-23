@@ -2,6 +2,10 @@
 
 ## Short Introduction
 
+
+<img width="872" height="533" alt="image" src="https://github.com/user-attachments/assets/23acff37-f67f-409d-85da-86decca165c5" />
+---
+
 This project provides a **Debian / Armbian (Bullseye)** system for the **VNPT MyTV Smartbox 2** powered by **Amlogic S805 (Meson8b)**.  
 Due to secure-boot restrictions on some boards, this setup **reuses the stock Android kernel (3.10.33)** and boots Debian via a custom initramfs and root filesystem.
 
@@ -25,12 +29,20 @@ There are **two supported installation methods**. The difference is where the De
 
 Please follow the steps **exactly**. No information in this guide is optional unless explicitly stated.
 
+
+
+
+
+---
+
+
+
 ---
 
 ### 1. Extract the Files
 
 - Use **7z (7-Zip)** to extract all provided archives.
-
+Please Make Sure You get the exactly File you need
 ---
 
 ### 2. Prepare the SD Card (Debian Image)
@@ -57,6 +69,24 @@ Skip this step if you want to boot Debian fully from **internal eMMC**.
   - `TWRP` (folder)
 
 - Copy **both** `twrp-3.1.1.zip` **and** the `TWRP` folder to a **USB drive**.
+
+
+---
+
+Chú Ý quan trọng, để đúng định dạng và vị trí file, lệch vị trí folder thôi là TWRP sẽ không nhìn thấy file để nạp!
+
+
+
+SD Cards:
+/sdcard/TWRP/BACKUPS/ ...etc
+
+USB Drive (Make Sure It In FAT32 Format)
+
+/[Usb Drive Name ]/TWRP/BACKUPS/ ... etc
+
+
+
+
 
 ---
 
@@ -145,6 +175,9 @@ Use this method if you need a larger Debian root filesystem than the internal st
   - Entering stock recovery
   - Selecting **“Apply update from cache”**
   - Selecting **`twrp-3.1.1.zip`**
+
+Chú Ý quan trọng, để đúng định dạng và vị trí file, lệch vị trí folder thôi là TWRP sẽ không nhìn thấy file để nạp
+
 
 ---
 
